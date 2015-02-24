@@ -1,0 +1,33 @@
+
+	public class Gast {
+		String vorname;
+		String nachname;
+		String city;
+		String firma;
+		
+		public Gast(String vvorname, String vnachname, String vcity, String vfirma) {
+			vorname = vvorname;
+			nachname = vnachname;
+			city = vcity;
+			firma = vfirma;
+			
+		}
+		public String getVorname() {
+			return vorname;
+		}
+		
+		public String getNachname() {
+			return nachname;
+		}
+		
+		public String getCity() {
+			return city;
+		}
+		
+		public String getFirma() {
+			return firma;
+		}
+		
+		
+		
+	}
