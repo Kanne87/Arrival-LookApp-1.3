@@ -1,0 +1,247 @@
+import java.awt.BorderLayout;
+import java.awt.event.*;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+
+import javax.swing.*;
+
+public class MainGui {
+	private JTextArea gastvorname;
+	private JTextArea gastnachname;
+	private JTextArea gastcity;
+	private JTextArea gastfirma;
+	private JTextField counter;
+	private JFrame frame;
+	private ArrayList<Gast> gastListe;
+	private Gast aktuellerGast;
+	private int aktuellerGastIndex;
+	private URI stringuri;
+	String vorname;
+	String nachname;
+	String city;
+	String firma;
+	
+	public static void main(String[] args) {
+		MainGui gui = new MainGui();
+		gui.los();
+	}
+	
+	public void los() {
+		frame = new JFrame("Arrival LookAPP v1.2");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		JPanel mainPanel = new JPanel();
+		JPanel textPanel = new JPanel();
+		gastvorname = new JTextArea(1,16);
+		gastvorname.setText("Vorname");
+		gastvorname.setLineWrap(true);
+		gastvorname.setWrapStyleWord(true);
+		gastnachname = new JTextArea(1,16);
+		gastnachname.setText("Nachname");
+		gastnachname.setLineWrap(true);
+		gastnachname.setWrapStyleWord(true);
+		gastcity = new JTextArea(1,16);
+		gastcity.setText("Wohnort");
+		gastcity.setLineWrap(true);
+		gastcity.setWrapStyleWord(true);
+		gastfirma = new JTextArea(1,16);
+		gastfirma.setText("Firma");
+		gastfirma.setLineWrap(true);
+		gastfirma.setWrapStyleWord(true);
+		counter = new JTextField();
+		counter.setText("00/00");
+		JButton vorherigerGast = new JButton("<");
+		vorherigerGast.addActionListener(new VorherigerGastListener());
+		JButton nächsterGast = new JButton(">");
+		nächsterGast.addActionListener(new NächsterGastListener());
+		JButton sucheStarten = new JButton("START");
+		sucheStarten.addActionListener(new SucheListener());
+		gastListe = new ArrayList<Gast>();
+		mainPanel.add(gastvorname);
+		mainPanel.add(gastnachname);
+		mainPanel.add(gastcity);
+		mainPanel.add(gastfirma);
+		textPanel.add(counter);
+		textPanel.add(vorherigerGast);
+		textPanel.add(nächsterGast);
+		textPanel.add(sucheStarten);
+		JMenuBar menüleiste = new JMenuBar();
+		JMenu menüDatei = new JMenu("Datei");
+		JMenuItem menüPunktLaden = new JMenuItem("Laden");
+		menüPunktLaden.addActionListener(new MenüLadenListener());
+		menüDatei.add(menüPunktLaden);
+		menüleiste.add(menüDatei);
+		frame.setJMenuBar(menüleiste);
+		frame.getContentPane().add(BorderLayout.CENTER, mainPanel);
+		frame.getContentPane().add(BorderLayout.SOUTH, textPanel);
+		frame.setSize(750,130);
+		frame.setAlwaysOnTop(true);
+		frame.setVisible(true);	
+	}
+	
+	public String countIt() {
+		String c1 = String.valueOf(aktuellerGastIndex+1);
+		String c2 = String.valueOf(gastListe.size());	
+		String c = c1 + "/" + c2;
+		return c;
+	}
+	
+	public class MenüLadenListener implements ActionListener {
+		public void actionPerformed(ActionEvent ev) {
+			JFileChooser dateiÖffnen = new JFileChooser();
+			dateiÖffnen.setCurrentDirectory(new File("//T:/Rezeption/Night Auditor/Arrival LookApp/export"));
+			dateiÖffnen.showOpenDialog(frame);
+			try {
+				dateiLaden(dateiÖffnen.getSelectedFile());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public class SucheListener implements ActionListener {
+		public void actionPerformed(ActionEvent ev) {
+			openWebpage();
+			nächstenGastZeigen();
+			counter.setText(countIt());
+		}
+	}
+	
+	public class VorherigerGastListener implements ActionListener {
+		public void actionPerformed(ActionEvent ev) {
+			vorherigenGastZeigen();
+			counter.setText(countIt());
+		}
+	}
+	
+	public class NächsterGastListener implements ActionListener {
+		public void actionPerformed(ActionEvent ev) {
+			nächstenGastZeigen();
+		}
+	}
+	
+	private void dateiLaden(File datei) {
+		aktuellerGastIndex = 0;
+		gastListe = new ArrayList<Gast>();
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(datei));
+			String zeile = null;
+					while ((zeile = reader.readLine()) != null) {
+						gastErstellen(zeile);
+					}
+					reader.close();
+		} catch(Exception ex) {
+			System.out.println("konnte Karte nicht lesen");
+			ex.printStackTrace();
+		}
+		aktuellerGast = gastListe.get(aktuellerGastIndex);
+		gastvorname.setText(aktuellerGast.getVorname());
+		gastnachname.setText(aktuellerGast.getNachname());
+		gastcity.setText(aktuellerGast.getCity());
+		gastfirma.setText(aktuellerGast.getFirma());
+		counter.setText(countIt());
+	}
+	
+	private void gastErstellen(String zuParsendeZeile) {
+		String[] ergebnis = zuParsendeZeile.split("\"");
+		vorname= "";
+		nachname="";
+		city="";
+		firma="";
+		try {
+			vorname = ergebnis[1].toString();
+			if (vorname.indexOf(" ") == -1) {
+			} else {
+				int io;	
+				while(vorname.indexOf(" ") != -1) {
+					io = vorname.indexOf(" ");
+					vorname = vorname.substring(0,io) +"+"+ vorname.substring(io+1, vorname.length());
+				}
+			}
+		} catch (Exception e1) {}
+		try {
+			nachname = ergebnis[3].toString();
+			if (nachname.indexOf(" ") == -1) {
+			} else {
+				int io;	
+				while(nachname.indexOf(" ") != -1) {
+					io = nachname.indexOf(" ");
+					nachname = nachname.substring(0,io) +"+"+ nachname.substring(io+1, nachname.length());
+				}
+			}
+		} catch (Exception e1) {}
+		try {
+			city = ergebnis[5].toString();
+			if (city.indexOf(" ") == -1) {
+			} else {
+				int io;	
+				while(city.indexOf(" ") != -1) {
+					io = city.indexOf(" ");
+					city = city.substring(0,io) +"+"+ city.substring(io+1, city.length());
+				}
+			}
+		} catch (Exception e) {}
+		try {
+			firma = ergebnis[7].toString();
+			if (firma.indexOf(" ") == -1) {
+			} else {
+				int io;	
+				while(firma.indexOf(" ") != -1) {
+					io = firma.indexOf(" ");
+					firma = firma.substring(0,io) +"+"+ firma.substring(io+1, firma.length());
+				}
+			firma ="+";	
+			}
+		} catch (Exception e) {}
+		Gast gast = new Gast(vorname, nachname, city, firma);
+		gastListe.add(gast);
+	}
+	
+	public void nächstenGastZeigen() {
+		aktuellerGastIndex++;
+		if (aktuellerGastIndex < gastListe.size()){
+			aktuellerGast = gastListe.get(aktuellerGastIndex);
+			gastvorname.setText(aktuellerGast.getVorname());
+			gastnachname.setText(aktuellerGast.getNachname());
+			gastcity.setText(aktuellerGast.getCity());
+			gastfirma.setText(aktuellerGast.getFirma());
+			counter.setText(countIt());
+		} else {
+		}
+	}
+	
+	public void vorherigenGastZeigen() {
+		aktuellerGastIndex--;
+		if (aktuellerGastIndex < gastListe.size()){
+			aktuellerGast = gastListe.get(aktuellerGastIndex);
+			gastvorname.setText(aktuellerGast.getVorname());
+			gastnachname.setText(aktuellerGast.getNachname());
+			gastcity.setText(aktuellerGast.getCity());
+			gastfirma.setText(aktuellerGast.getFirma());		
+			counter.setText(countIt());
+		} else {
+		}
+	}
+
+	public void openWebpage() {
+		String name = (aktuellerGast.getVorname() + "+" + aktuellerGast.getNachname() + "+" + aktuellerGast.getCity() + "+" + aktuellerGast.getFirma());
+		String stringurl = ("https://www.google.de/#q=" + name);
+		System.out.println(stringurl);
+		while (stringurl.endsWith("+")) {	
+			stringurl = stringurl.substring(0, stringurl.length()-1);
+		}
+		System.out.println(stringurl);
+		try {
+			stringuri = new URI(stringurl);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		try {
+			java.awt.Desktop.getDesktop().browse(stringuri);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}
